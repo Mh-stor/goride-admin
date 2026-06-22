@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة الإدارة المؤمنة - Go Ride</title>
+    <style>
+        body { background: #090f1d; color: #fff; font-family: system-ui, sans-serif; padding: 30px; direction: rtl; }
+        
+        /* شاشة تسجيل الدخول المضافة للحماية */
+        .login-screen-wrapper {
+            max-width: 420px; margin: 80px auto; background: #111a2e; padding: 35px; border-radius: 16px;
+            border: 1px solid #1e293b; box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center;
+        }
+        .login-screen-wrapper h2 { color: #38bdf8; margin-bottom: 25px; font-size: 1.5rem; }
+        .error-hint { color: #ef4444; font-size: 0.85rem; margin-bottom: 15px; display: none; font-weight: bold; }
+
+        /* حاوية لوحة التحكم الرئيسية */
+        .admin-container { display: none; max-width: 900px; margin: 0 auto; background: #111a2e; padding: 30px; border-radius: 16px; border: 1px solid #1e293b; }
+        h1 { color: #38bdf8; border-bottom: 2px solid #1e293b; padding-bottom: 15px; font-size: 1.8rem; }
+        h2 { color: #cbd5e1; font-size: 1.2rem; margin-top: 25px; margin-bottom: 15px; }
+        .form-section { background: #1b263b; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #94a3b8; font-size: 0.9rem; }
+        input, textarea, select { width: 100%; padding: 12px; background: #090f1d; border: 1px solid #2d3748; border-radius: 8px; color: #fff; box-sizing: border-box; margin-bottom: 15px; }
+        input:focus, textarea:focus { border-color: #38bdf8; outline: none; }
+        .btn-save { background: #38bdf8; color: #000; font-weight: bold; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; width: 100%; }
+        .btn-save:hover { background: #0284c7; color: #fff; }
+        .image-guidelines-box { background: #0f172a; border-right: 4px solid #38bdf8; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.6; }
+        .guideline-title { color: #38bdf8; font-weight: bold; margin-bottom: 5px; }
+        .guideline-meta { color: #e2e8f0; margin-bottom: 10px; }
+        .btn-logout { background: #374151; color: white; width: auto; padding: 8px 15px; font-size: 0.85rem; float: left; margin-top: -55px; }
+    </style>
+</head>
+<body>
+
+    <div class="login-screen-wrapper" id="loginBox">
+        <h2>🔒 تسجيل دخول الإدارة - GoRide</h2>
+        <div class="error-hint" id="loginError">البريد الإلكتروني أو كلمة المرور غير صحيحة!</div>
+        <form id="loginForm">
+            <label style="text-align: right;">البريد الإلكتروني الإداري:</label>
+            <input type="email" id="adm-email" required placeholder="admin@goride.com">
+            
+            <label style="text-align: right;">كلمة المرور السرية:</label>
+            <input type="password" id="adm-pass" required placeholder="••••••••">
+            
+            <button type="submit" class="btn-save" style="margin-top: 10px;">دخول آمن للوحة التحكم</button>
+        </form>
+    </div>
+
+    <div class="admin-container" id="adminPanel">
+        <h1>🛠️ لوحة التحكم وإدارة منصة Go Ride</h1>
+        <button class="btn-save btn-logout" id="logoutBtn">تسجيل الخروج 🚪</button>
+        <p style="color:#94a3b8; font-size:0.9rem; margin-bottom:25px;">مرحباً بك مجدداً في الإدارة. يمكنك تحديث الروابط، والموقع الجغرافي، والمحتوى ديناميكياً.</p>
+
+        <div class="form-section">
+            <h2>📍 ربط وإدارة موقع المقر الرئيسي (Google Maps)</h2>
+            <label>انسخ رابط موقع المقر من خرائط جوجل والصقه هنا ليتحول إليه الهاتف تلقائياً:</label>
+            <input type="text" id="map-url-input" placeholder="https://maps.app.goo.gl/..." style="border-color: #eab308;">
+        </div>
+
+        <div class="form-section">
+            <h2>🎥 روابط الفيديوهات (المشغل الذكي لمنع الزوم)</h2>
+            <label>رابط الفيديو الرئيسي (المنتصف):</label>
+            <input type="text" id="vid-main" placeholder="ضع رابط MP4 المباشر هنا...">
+            <label>رابط الفيديو الجانبي الأول:</label>
+            <input type="text" id="vid-side1" placeholder="ضع رابط MP4 المباشر هنا...">
+            <label>رابط الفيديو الجانبي الثاني:</label>
+            <input type="text" id="vid-side2" placeholder="ضع رابط MP4 المباشر هنا...">
+        </div>
+
+        <div class="form-section">
+            <h2>🔗 أسماء وعناوين الأقسام الرئيسية في القائمة</h2>
+            <label>اسم قسم الرئيسية:</label> <input type="text" id="title-home">
+            <label>اسم قسم الخدمات:</label> <input type="text" id="title-services">
+            <label>اسم قسم مميزاتنا:</label> <input type="text" id="title-features">
+            <label>اسم قسم آراء عملائنا:</label> <input type="text" id="title-reviews">
+            <label>اسم قسم الدعم والشكاوى:</label> <input type="text" id="title-support">
+        </div>
+
+        <div class="form-section">
+            <h2>📦 إدارة وبطاقات قسم الخدمات</h2>
+            <div class="image-guidelines-box">
+                <div class="guideline-title">💡 دليل المواصفات المثالية لصور الخدمات لضمان أفضل ظهور وسرعة:</div>
+                <div class="guideline-meta">
+                    <strong>️⃣ صيغة الصورة:</strong> <code>WebP</code> مفضل للسرعة، أو <code>PNG</code> للخلفيات الشفافة.<br>
+                    <strong>️⃣ الأبعاد المثالية:</strong> العرض: <code>400 بكسل</code> | الارتفاع: <code>225 بكسل</code> (نسبة 16:9 عريضة).
+                </div>
+            </div>
+            <label>اختر البطاقة لتحديثها أو استبدالها:</label>
+            <select id="srv-index">
+                <option value="0">البطاقة الأولى (رحلة اقتصادية)</option>
+                <option value="1">البطاقة الثانية (رحلة فاخرة VIP)</option>
+                <option value="2">البطاقة الثالثة (رحلات بين المدن)</option>
+            </select>
+            <label>العنوان الجديد للخدمة:</label> <input type="text" id="srv-title">
+            <label>شرح وتفاصيل الخدمة بالكامل:</label> <textarea id="srv-desc" rows="3"></textarea>
+            <label>رابط صورة الخدمة المخصصة:</label> <input type="text" id="srv-img">
+            <p style="color: #22c55e; font-size: 0.85rem; margin-top: -5px; font-weight: bold;">* يتم حفظ التعديلات تلقائياً في الذاكرة أثناء الكتابة للبطاقة المحددة.</p>
+        </div>
+
+        <div class="form-section">
+            <h2>🔗 روابط التحميل للمتاجر الرسمية</h2>
+            <label>رابط متجر آبل (App Store):</label> <input type="text" id="link-apple-url">
+            <label>رابط متجر أندرويد (Google Play):</label> <input type="text" id="link-android-url">
+        </div>
+
+        <button class="btn-save" id="save-all-btn" style="font-size:1.1rem; padding:15px;">💾 حفظ وترحيل كافة التعديلات إلى الموقع الرئيسي</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDf_edtZzF4kay5cNTSHtgUcE_QOkIrz1k",
+            authDomain: "goride-a5f66.firebaseapp.com",
+            projectId: "goride-a5f66",
+            storageBucket: "goride-a5f66.firebasestorage.app",
+            messagingSenderId: "868206593746",
+            appId: "1:868206593746:web:8f7364dabb9cb6413ccf0b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const settingsDocRef = doc(db, "site_settings", "v1");
+
+        const ADMIN_EMAIL = "admin@goride.com";
+        const ADMIN_PASSWORD = "0581858580";
+
+        // مصفوفة محلية لتخزين بيانات الكروت الثلاثة
+        let servicesArray = [
+            { title: "رحلة اقتصادية", desc: "", img: "" },
+            { title: "رحلة فاخرة VIP", desc: "", img: "" },
+            { title: "رحلات بين المدن", desc: "", img: "" }
+        ];
+
+        // التعامل مع نظام التحقق والولوج للوحة التحكم
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const emailInput = document.getElementById('adm-email').value.trim();
+                const passInput = document.getElementById('adm-pass').value.trim();
+                const errorHint = document.getElementById('loginError');
+
+                if (emailInput === ADMIN_EMAIL && passInput === ADMIN_PASSWORD) {
+                    errorHint.style.display = 'none';
+                    document.getElementById('loginBox').style.display = 'none';
+                    document.getElementById('adminPanel').style.display = 'block';
+                    loadCurrentSettings();
+                } else {
+                    errorHint.style.display = 'block';
+                }
+            });
+        }
+
+        // دالة خروج المشرف وإعادة قفل اللوحة
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                document.getElementById('adminPanel').style.display = 'none';
+                document.getElementById('loginBox').style.display = 'block';
+                if(loginForm) loginForm.reset();
+            });
+        }
+
+        // دالة لتحديث قيم الخانات المعروضة بناءً على البطاقة المحددة
+        function refreshServiceInputs(index) {
+            const card = servicesArray[index];
+            if(document.getElementById('srv-title')) document.getElementById('srv-title').value = card.title || "";
+            if(document.getElementById('srv-desc')) document.getElementById('srv-desc').value = card.desc || "";
+            if(document.getElementById('srv-img')) document.getElementById('srv-img').value = card.img || "";
+        }
+
+        // دالة لحفظ المدخلات الحالية مباشرة بداخل المصفوفة المحلية أثناء الكتابة
+        function saveCurrentInputsToMemory() {
+            const index = parseInt(document.getElementById('srv-index').value);
+            if (servicesArray[index]) {
+                servicesArray[index].title = document.getElementById('srv-title').value.trim();
+                servicesArray[index].desc = document.getElementById('srv-desc').value.trim();
+                servicesArray[index].img = document.getElementById('srv-img').value.trim();
+            }
+        }
+
+        // ربط الخانات بحدث الاستماع أثناء الكتابة للحفظ التلقائي الفوري
+        document.getElementById('srv-title').addEventListener('input', saveCurrentInputsToMemory);
+        document.getElementById('srv-desc').addEventListener('input', saveCurrentInputsToMemory);
+        document.getElementById('srv-img').addEventListener('input', saveCurrentInputsToMemory);
+
+        // الاستماع لحدث تبديل الاختيار في القائمة المنسدلة للخدمات
+        const srvSelect = document.getElementById('srv-index');
+        if (srvSelect) {
+            srvSelect.addEventListener('change', (e) => {
+                const selectedIndex = parseInt(e.target.value);
+                refreshServiceInputs(selectedIndex);
+            });
+        }
+
+        async function loadCurrentSettings() {
+            try {
+                const docSnap = await getDoc(settingsDocRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    if (data.reviewsTitle && document.getElementById('title-reviews')) {
+                        document.getElementById('title-reviews').value = data.reviewsTitle;
+                    }
+                    if (data.mapUrl && document.getElementById('map-url-input')) {
+                        document.getElementById('map-url-input').value = data.mapUrl;
+                    }
+                    if (data.video1 && document.getElementById('vid-main')) {
+                        document.getElementById('vid-main').value = data.video1;
+                    }
+                    if (data.video2 && document.getElementById('vid-side1')) {
+                        document.getElementById('vid-side1').value = data.video2;
+                    }
+                    if (data.video3 && document.getElementById('vid-side2')) {
+                        document.getElementById('vid-side2').value = data.video3;
+                    }
+                    if (data.titleHome && document.getElementById('title-home')) {
+                        document.getElementById('title-home').value = data.titleHome;
+                    }
+                    if (data.titleServices && document.getElementById('title-services')) {
+                        document.getElementById('title-services').value = data.titleServices;
+                    }
+                    if (data.titleFeatures && document.getElementById('title-features')) {
+                        document.getElementById('title-features').value = data.titleFeatures;
+                    }
+                    if (data.titleSupport && document.getElementById('title-support')) {
+                        document.getElementById('title-support').value = data.titleSupport;
+                    }
+                    if (data.linkApple && document.getElementById('link-apple-url')) {
+                        document.getElementById('link-apple-url').value = data.linkApple;
+                    }
+                    if (data.linkAndroid && document.getElementById('link-android-url')) {
+                        document.getElementById('link-android-url').value = data.linkAndroid;
+                    }
+                    
+                    // استعادة مصفوفة الخدمات من السيرفر إذا كانت متوفرة
+                    if (data.services && data.services.length === 3) {
+                        servicesArray = data.services;
+                    }
+                    
+                    // عرض بيانات البطاقة الأولى (0) كافتراضي عند الفتح
+                    refreshServiceInputs(0);
+                    if(srvSelect) srvSelect.value = "0";
+
+                    console.log("تم جلب البيانات السحابية الحالية للوحة التحكم بنجاح.");
+                }
+            } catch (e) {
+                console.error("خطأ أثناء جلب البيانات من السيرفر: ", e);
+            }
+        }
+
+        const saveBtn = document.getElementById('save-all-btn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                
+                // تأكيد أخذ آخر تعديل كتبته في الخانات قبل لحظة الضغط على الحفظ
+                saveCurrentInputsToMemory();
+
+                const updatedData = {
+                    mapUrl: document.getElementById('map-url-input') ? document.getElementById('map-url-input').value.trim() : "",
+                    video1: document.getElementById('vid-main') ? document.getElementById('vid-main').value.trim() : "",
+                    video2: document.getElementById('vid-side1') ? document.getElementById('vid-side1').value.trim() : "",
+                    video3: document.getElementById('vid-side2') ? document.getElementById('vid-side2').value.trim() : "",
+                    titleHome: document.getElementById('title-home') ? document.getElementById('title-home').value.trim() : "",
+                    titleServices: document.getElementById('title-services') ? document.getElementById('title-services').value.trim() : "",
+                    titleFeatures: document.getElementById('title-features') ? document.getElementById('title-features').value.trim() : "",
+                    reviewsTitle: document.getElementById('title-reviews') ? document.getElementById('title-reviews').value.trim() : "آراء عملائنا",
+                    titleSupport: document.getElementById('title-support') ? document.getElementById('title-support').value.trim() : "",
+                    linkApple: document.getElementById('link-apple-url') ? document.getElementById('link-apple-url').value.trim() : "",
+                    linkAndroid: document.getElementById('link-android-url') ? document.getElementById('link-android-url').value.trim() : "",
+                    services: servicesArray, // ترحيل مصفوفة كروت الخدمات المعدلة بالكامل
+                    lastUpdated: new Date()
+                };
+
+                try {
+                    await setDoc(settingsDocRef, updatedData, { merge: true });
+                    alert('🎯 كفو يا محمد! تم ترحيل وحفظ كافة التعديلات سحابياً بنجاح! ستظهر عند كل العملاء فوراً.');
+                } catch (error) {
+                    console.error("حدث خطأ أثناء الرفع السحابي: ", error);
+                    alert('تعذر الحفظ السحابي، يرجى التحقق من وضع الحماية (Test Mode) في Firebase والاتصال بالإنترنت.');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
