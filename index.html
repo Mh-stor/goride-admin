@@ -107,128 +107,184 @@
         <button class="btn-save" id="save-all-btn" style="font-size:1.1rem; padding:15px;">💾 حفظ وترحيل كافة التعديلات إلى الموقع الرئيسي</button>
     </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyDf_edtZzF4kay5cNTSHtgUcE_QOkIrz1k",
-        authDomain: "goride-a5f66.firebaseapp.com",
-        projectId: "goride-a5f66",
-        storageBucket: "goride-a5f66.firebasestorage.app",
-        messagingSenderId: "868206593746",
-        appId: "1:868206593746:web:8f7364dabb9cb6413ccf0b"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const settingsDocRef = doc(db, "site_settings", "v1");
-
-    const ADMIN_EMAIL = "admin@goride.com";
-    const ADMIN_PASSWORD = "0581858580";
-
-    // المصفوفات المحلية
-    let servicesArray = [
-        { title: "رحلة اقتصادية", desc: "", img: "" },
-        { title: "رحلة فاخرة VIP", desc: "", img: "" },
-        { title: "رحلات بين المدن", desc: "", img: "" }
-    ];
-    let reviewsArray = []; // مصفوفة المراجعات الجديدة
-
-    // --- نظام التحقق ---
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const emailInput = document.getElementById('adm-email').value.trim();
-            const passInput = document.getElementById('adm-pass').value.trim();
-            const errorHint = document.getElementById('loginError');
-
-            if (emailInput === ADMIN_EMAIL && passInput === ADMIN_PASSWORD) {
-                errorHint.style.display = 'none';
-                document.getElementById('loginBox').style.display = 'none';
-                document.getElementById('adminPanel').style.display = 'block';
-                loadCurrentSettings();
-            } else {
-                errorHint.style.display = 'block';
-            }
-        });
-    }
-
-    // --- إدارة الخدمات ---
-    function refreshServiceInputs(index) {
-        const card = servicesArray[index];
-        document.getElementById('srv-title').value = card.title || "";
-        document.getElementById('srv-desc').value = card.desc || "";
-        document.getElementById('srv-img').value = card.img || "";
-    }
-
-    function saveCurrentInputsToMemory() {
-        const index = parseInt(document.getElementById('srv-index').value);
-        if (servicesArray[index]) {
-            servicesArray[index].title = document.getElementById('srv-title').value.trim();
-            servicesArray[index].desc = document.getElementById('srv-desc').value.trim();
-            servicesArray[index].img = document.getElementById('srv-img').value.trim();
-        }
-    }
-
-    // --- إدارة آراء العملاء (الجديد) ---
-    window.renderReviewsInPanel = function() {
-        const container = document.getElementById('reviews-list-container');
-        container.innerHTML = '';
-        reviewsArray.forEach((rev, index) => {
-            container.innerHTML += `
-                <div style="background:#090f1d; padding:15px; margin-bottom:10px; border-radius:8px; border:1px solid #334155;">
-                    <input type="text" value="${rev.name}" placeholder="اسم العميل" onchange="reviewsArray[${index}].name = this.value">
-                    <textarea placeholder="نص الرأي" onchange="reviewsArray[${index}].text = this.value">${rev.text}</textarea>
-                    <button onclick="removeReview(${index})" style="background:#ef4444; color:white; border:none; padding:5px; cursor:pointer;">حذف الرأي</button>
-                </div>
-            `;
-        });
-    };
-
-    window.addReview = function() {
-        reviewsArray.push({ name: "عميل جديد", title: "عميل", text: "اكتب الرأي هنا...", avatar: "https://via.placeholder.com/150" });
-        renderReviewsInPanel();
-    };
-
-    window.removeReview = function(index) {
-        reviewsArray.splice(index, 1);
-        renderReviewsInPanel();
-    };
-
-    // --- جلب وحفظ البيانات ---
-    async function loadCurrentSettings() {
-        try {
-            const docSnap = await getDoc(settingsDocRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                // تحديث الخدمات
-                if (data.services) servicesArray = data.services;
-                // تحديث المراجعات
-                reviewsArray = data.reviewsData || [];
-                renderReviewsInPanel();
-                
-                // تحديث باقي الحقول (كما في كودك الأصلي)
-                if (document.getElementById('title-reviews')) document.getElementById('title-reviews').value = data.reviewsTitle || "";
-                // ... (باقي الحقول بنفس الطريقة)
-                refreshServiceInputs(0);
-            }
-        } catch (e) { console.error(e); }
-    }
-
-    document.getElementById('save-all-btn').addEventListener('click', async () => {
-        saveCurrentInputsToMemory();
-        const updatedData = {
-            services: servicesArray,
-            reviewsData: reviewsArray, // ترحيل المراجعات
-            reviewsTitle: document.getElementById('title-reviews').value,
-            // ... (باقي الحقول)
-            lastUpdated: new Date()
+        const firebaseConfig = {
+            apiKey: "AIzaSyDf_edtZzF4kay5cNTSHtgUcE_QOkIrz1k",
+            authDomain: "goride-a5f66.firebaseapp.com",
+            projectId: "goride-a5f66",
+            storageBucket: "goride-a5f66.firebasestorage.app",
+            messagingSenderId: "868206593746",
+            appId: "1:868206593746:web:8f7364dabb9cb6413ccf0b"
         };
-        await setDoc(settingsDocRef, updatedData, { merge: true });
-        alert('🎯 تم حفظ كل شيء سحابياً يا محمد!');
-    });
-</script>
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const settingsDocRef = doc(db, "site_settings", "v1");
+
+        const ADMIN_EMAIL = "admin@goride.com";
+        const ADMIN_PASSWORD = "0581858580";
+
+        // مصفوفة محلية لتخزين بيانات الكروت الثلاثة
+        let servicesArray = [
+            { title: "رحلة اقتصادية", desc: "", img: "" },
+            { title: "رحلة فاخرة VIP", desc: "", img: "" },
+            { title: "رحلات بين المدن", desc: "", img: "" }
+        ];
+
+        // التعامل مع نظام التحقق والولوج للوحة التحكم
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const emailInput = document.getElementById('adm-email').value.trim();
+                const passInput = document.getElementById('adm-pass').value.trim();
+                const errorHint = document.getElementById('loginError');
+
+                if (emailInput === ADMIN_EMAIL && passInput === ADMIN_PASSWORD) {
+                    errorHint.style.display = 'none';
+                    document.getElementById('loginBox').style.display = 'none';
+                    document.getElementById('adminPanel').style.display = 'block';
+                    loadCurrentSettings();
+                } else {
+                    errorHint.style.display = 'block';
+                }
+            });
+        }
+
+        // دالة خروج المشرف وإعادة قفل اللوحة
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                document.getElementById('adminPanel').style.display = 'none';
+                document.getElementById('loginBox').style.display = 'block';
+                if(loginForm) loginForm.reset();
+            });
+        }
+
+        // دالة لتحديث قيم الخانات المعروضة بناءً على البطاقة المحددة
+        function refreshServiceInputs(index) {
+            const card = servicesArray[index];
+            if(document.getElementById('srv-title')) document.getElementById('srv-title').value = card.title || "";
+            if(document.getElementById('srv-desc')) document.getElementById('srv-desc').value = card.desc || "";
+            if(document.getElementById('srv-img')) document.getElementById('srv-img').value = card.img || "";
+        }
+
+        // دالة لحفظ المدخلات الحالية مباشرة بداخل المصفوفة المحلية أثناء الكتابة
+        function saveCurrentInputsToMemory() {
+            const index = parseInt(document.getElementById('srv-index').value);
+            if (servicesArray[index]) {
+                servicesArray[index].title = document.getElementById('srv-title').value.trim();
+                servicesArray[index].desc = document.getElementById('srv-desc').value.trim();
+                servicesArray[index].img = document.getElementById('srv-img').value.trim();
+            }
+        }
+
+        // ربط الخانات بحدث الاستماع أثناء الكتابة للحفظ التلقائي الفوري
+        document.getElementById('srv-title').addEventListener('input', saveCurrentInputsToMemory);
+        document.getElementById('srv-desc').addEventListener('input', saveCurrentInputsToMemory);
+        document.getElementById('srv-img').addEventListener('input', saveCurrentInputsToMemory);
+
+        // الاستماع لحدث تبديل الاختيار في القائمة المنسدلة للخدمات
+        const srvSelect = document.getElementById('srv-index');
+        if (srvSelect) {
+            srvSelect.addEventListener('change', (e) => {
+                const selectedIndex = parseInt(e.target.value);
+                refreshServiceInputs(selectedIndex);
+            });
+        }
+
+        async function loadCurrentSettings() {
+            try {
+                const docSnap = await getDoc(settingsDocRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    if (data.reviewsTitle && document.getElementById('title-reviews')) {
+                        document.getElementById('title-reviews').value = data.reviewsTitle;
+                    }
+                    if (data.mapUrl && document.getElementById('map-url-input')) {
+                        document.getElementById('map-url-input').value = data.mapUrl;
+                    }
+                    if (data.video1 && document.getElementById('vid-main')) {
+                        document.getElementById('vid-main').value = data.video1;
+                    }
+                    if (data.video2 && document.getElementById('vid-side1')) {
+                        document.getElementById('vid-side1').value = data.video2;
+                    }
+                    if (data.video3 && document.getElementById('vid-side2')) {
+                        document.getElementById('vid-side2').value = data.video3;
+                    }
+                    if (data.titleHome && document.getElementById('title-home')) {
+                        document.getElementById('title-home').value = data.titleHome;
+                    }
+                    if (data.titleServices && document.getElementById('title-services')) {
+                        document.getElementById('title-services').value = data.titleServices;
+                    }
+                    if (data.titleFeatures && document.getElementById('title-features')) {
+                        document.getElementById('title-features').value = data.titleFeatures;
+                    }
+                    if (data.titleSupport && document.getElementById('title-support')) {
+                        document.getElementById('title-support').value = data.titleSupport;
+                    }
+                    if (data.linkApple && document.getElementById('link-apple-url')) {
+                        document.getElementById('link-apple-url').value = data.linkApple;
+                    }
+                    if (data.linkAndroid && document.getElementById('link-android-url')) {
+                        document.getElementById('link-android-url').value = data.linkAndroid;
+                    }
+                    
+                    // استعادة مصفوفة الخدمات من السيرفر إذا كانت متوفرة
+                    if (data.services && data.services.length === 3) {
+                        servicesArray = data.services;
+                    }
+                    
+                    // عرض بيانات البطاقة الأولى (0) كافتراضي عند الفتح
+                    refreshServiceInputs(0);
+                    if(srvSelect) srvSelect.value = "0";
+
+                    console.log("تم جلب البيانات السحابية الحالية للوحة التحكم بنجاح.");
+                }
+            } catch (e) {
+                console.error("خطأ أثناء جلب البيانات من السيرفر: ", e);
+            }
+        }
+
+        const saveBtn = document.getElementById('save-all-btn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                
+                // تأكيد أخذ آخر تعديل كتبته في الخانات قبل لحظة الضغط على الحفظ
+                saveCurrentInputsToMemory();
+
+                const updatedData = {
+                    mapUrl: document.getElementById('map-url-input') ? document.getElementById('map-url-input').value.trim() : "",
+                    video1: document.getElementById('vid-main') ? document.getElementById('vid-main').value.trim() : "",
+                    video2: document.getElementById('vid-side1') ? document.getElementById('vid-side1').value.trim() : "",
+                    video3: document.getElementById('vid-side2') ? document.getElementById('vid-side2').value.trim() : "",
+                    titleHome: document.getElementById('title-home') ? document.getElementById('title-home').value.trim() : "",
+                    titleServices: document.getElementById('title-services') ? document.getElementById('title-services').value.trim() : "",
+                    titleFeatures: document.getElementById('title-features') ? document.getElementById('title-features').value.trim() : "",
+                    reviewsTitle: document.getElementById('title-reviews') ? document.getElementById('title-reviews').value.trim() : "آراء عملائنا",
+                    titleSupport: document.getElementById('title-support') ? document.getElementById('title-support').value.trim() : "",
+                    linkApple: document.getElementById('link-apple-url') ? document.getElementById('link-apple-url').value.trim() : "",
+                    linkAndroid: document.getElementById('link-android-url') ? document.getElementById('link-android-url').value.trim() : "",
+                    services: servicesArray, // ترحيل مصفوفة كروت الخدمات المعدلة بالكامل
+                    lastUpdated: new Date()
+                };
+
+                try {
+                    await setDoc(settingsDocRef, updatedData, { merge: true });
+                    alert('🎯 كفو يا محمد! تم ترحيل وحفظ كافة التعديلات سحابياً بنجاح! ستظهر عند كل العملاء فوراً.');
+                } catch (error) {
+                    console.error("حدث خطأ أثناء الرفع السحابي: ", error);
+                    alert('تعذر الحفظ السحابي، يرجى التحقق من وضع الحماية (Test Mode) في Firebase والاتصال بالإنترنت.');
+                }
+            });
+        }
+    </script>
 </body>
 </html>
